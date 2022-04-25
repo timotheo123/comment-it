@@ -16,3 +16,4 @@ use App\Http\Controllers\CommentsController;
 
 Route::get("/", [CommentsController::class, "index"]);
 Route::get("/list", [CommentsController::class, "list"]);
+Route::post("/store", [CommentsController::class, "store"]);

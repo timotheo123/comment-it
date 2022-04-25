@@ -42,17 +42,51 @@
 </head>
 <body>
     <div class="container justify-content-center mt-5 border-left border-right pb-3 rounded pt-1">
-        <div class="d-flex justify-content-center pt-3 pb-2"> <input type="text" name="name" placeholder="Name" class="form-control"> </div>
-        <div class="d-flex justify-content-center pt-3 pb-2"> <textarea name="comment" placeholder="Comment" class="form-control"></textarea> </div>
-        <div class="d-flex justify-content-center pt-3 pb-2"> <button type="submit" class=" btn btn-success">Submit</button></div>
-        <div id="comment-section" class="d-flex justify-content-center py-2">
-            <div class="pt-3 pb-2"> <p>Loading comments...</p></div>
+        <div id="message"></div>
+        <form id="comment-form">
+            <input type="hidden" name="_token" value="{{csrf_token()}}">
+            <div class="justify-content-center pt-3 pb-2"> <input type="text" name="name" placeholder="Name" class="form-control"> </div>
+            <div class="justify-content-center pt-3 pb-2"> <textarea name="comment" placeholder="Comment" class="form-control"></textarea> </div>
+            <div class="d-flex justify-content-center pt-3 pb-2"> <button onclick="save_comment()" type="button" class=" btn btn-success">Submit</button></div>
+        </form>
+        <div id="comment-section" class="justify-content-center py-2">
+            <div class="pt-3 pb-2 text-center"> <p>Loading comments...</p></div>
         </div>
     </div>
     <script>
         $(function(){
             get_list().then((data) => refresh_comment_section(data));
         });
+
+        function save_comment(){
+            $.ajax({
+                url: "store",
+                method: "POST",
+                data: $("#comment-form").serialize(),
+                beforeSend: function(){
+                    $("#comment-form button").prop("disable", true);
+                },
+                dataType: "JSON",
+                success: function(response){
+                    alert(response.message);
+                    if(response.success){
+                        get_list().then((data) => refresh_comment_section(data))
+                    }
+                },
+                error: function(response){
+                    let message = "Error occurred. Please try again.";
+
+                    if(response.status == 422){
+                        message = response.responseJSON.message;
+                    }
+
+                    alert(message);
+                },
+                complete: function(){
+                    $("#comment-form button").prop("disable", false);
+                }
+            })
+        }
 
         function get_list(){
             return new Promise((resolve, reject) => {
@@ -73,20 +107,20 @@
 
         function refresh_comment_section(list){
             $("#comment-section").empty();
-            let str = list.length > 0 ? "" : `<div class="pt-3 pb-2"> <p>No comments yet.</p></div>`;
+            let str = list.length > 0 ? "" : `<div class="pt-3 pb-2"> <p class="text-center">No comments yet. Be the first to comment!</p></div>`;
 
             for(i in list){
-                str += comment_card(list[i].name, list[i].comment);
+                str += comment_card(list[i].name, list[i].comment, list[i].created_at);
             }
 
             $("#comment-section").html(str);
         }
 
-        function comment_card(name, comment){
-            return `<div class="shadowed-box py-2 px-2"> 
+        function comment_card(name, comment, created_at){
+            return `<div class="shadowed-box py-2 px-2 mt-2"> 
                         <span class="comment">${comment}</span>
-                        <div class="d-flex justify-content-between py-1 pt-2">
-                            <div><span class="name">- ${name}</span></div>
+                        <div class="justify-content-between py-1 pt-2">
+                            <div><span class="name">- ${name} written on ${created_at}</span></div>
                         </div>
                     </div>`;
         }
