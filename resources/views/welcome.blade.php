@@ -7,8 +7,8 @@
     <title>Comment It!</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css">
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
     <style>
         body {
             background-color: #fff
@@ -46,12 +46,50 @@
         <div class="d-flex justify-content-center pt-3 pb-2"> <textarea name="comment" placeholder="Comment" class="form-control"></textarea> </div>
         <div class="d-flex justify-content-center pt-3 pb-2"> <button type="submit" class=" btn btn-success">Submit</button></div>
         <div id="comment-section" class="d-flex justify-content-center py-2">
-            <div class="shadowed-box py-2 px-2"> <span class="comment">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugiat tempora illo incidunt quo iste, magnam aspernatur quasi labore! Quod, autem.</span>
-                <div class="d-flex justify-content-between py-1 pt-2">
-                    <div><span class="name">John Doe</span></div>
-                </div>
-            </div>
+            <div class="pt-3 pb-2"> <p>Loading comments...</p></div>
         </div>
     </div>
+    <script>
+        $(function(){
+            get_list().then((data) => refresh_comment_section(data));
+        });
+
+        function get_list(){
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "list",
+                    method: "GET",
+                    dataType: "JSON",
+                    success: function(response){
+                        resolve(response.data);
+                    },
+                    error: function(){
+                        alert("Error occurred. Please try again.");
+                        reject(false);
+                    }
+                });
+            });
+        }
+
+        function refresh_comment_section(list){
+            $("#comment-section").empty();
+            let str = list.length > 0 ? "" : `<div class="pt-3 pb-2"> <p>No comments yet.</p></div>`;
+
+            for(i in list){
+                str += comment_card(list[i].name, list[i].comment);
+            }
+
+            $("#comment-section").html(str);
+        }
+
+        function comment_card(name, comment){
+            return `<div class="shadowed-box py-2 px-2"> 
+                        <span class="comment">${comment}</span>
+                        <div class="d-flex justify-content-between py-1 pt-2">
+                            <div><span class="name">- ${name}</span></div>
+                        </div>
+                    </div>`;
+        }
+    </script>
 </body>
 </html>
